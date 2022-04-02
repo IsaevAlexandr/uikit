@@ -26,6 +26,7 @@ interface DialogOwnProps {
     className?: string;
     modalClassName?: string;
     size?: 's' | 'm' | 'l';
+    container?: HTMLElement;
 }
 
 interface DialogDefaultProps {
@@ -55,6 +56,7 @@ export class Dialog extends React.Component<DialogInnerProps> {
 
     render() {
         const {
+            container,
             children,
             open,
             disableBodyScrollLock,
@@ -84,6 +86,7 @@ export class Dialog extends React.Component<DialogInnerProps> {
                 onOutsideClick={onOutsideClick}
                 onClose={onClose}
                 className={b('modal', modalClassName)}
+                container={container}
                 qa={qa}
             >
                 <div className={b({size, 'has-close': hasCloseButton}, className)}>

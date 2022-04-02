@@ -15,6 +15,7 @@ import {PopupArrow} from './PopupArrow';
 import {usePreviousValue} from '../utils/usePreviousValue';
 import {useForceUpdate} from '../utils/useForceUpdate';
 import {useForkRef} from '../utils/useForkRef';
+import {useLayerManger} from '../utils/useLayerManager';
 
 import './Popup.scss';
 
@@ -111,12 +112,14 @@ export function Popup({
 
     const handleRef = useForkRef(containerRef, (ref) => setPopperRef(ref));
 
+    const layerManager = useLayerManger();
+
     if (!keepMounted && !open && !inTransition.current) {
         return null;
     }
 
     return (
-        <Portal container={container}>
+        <Portal container={container ?? layerManager.container}>
             <div
                 ref={handleRef}
                 data-inited={hasBeenOpen.current ? '' : undefined}

@@ -44,3 +44,5 @@ export * from './utils/withEventBrokerDomHandlers';
 export * from './utils/useEventBroker';
 export * from './utils/useLayer';
 export * from './utils/useVirtualElementRef';
+export * from './utils/LayerProvider';
+export * from './utils/useLayerManager';

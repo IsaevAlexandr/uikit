@@ -1,6 +1,7 @@
 import React from 'react';
 
-import {layerManager, LayerCloseReason, LayerExtendableProps, LayerConfig} from './LayerManager';
+import {useLayerManger} from './useLayerManager';
+import {LayerCloseReason, LayerExtendableProps, LayerConfig} from './LayerManager';
 
 export type {LayerCloseReason, LayerExtendableProps};
 
@@ -52,6 +53,8 @@ export function useLayer({
         enabled,
     ]);
 
+    const layerManager = useLayerManger();
+
     React.useEffect(() => {
         if (open && enabled) {
             const layerConfig = layerConfigRef.current;
@@ -63,5 +66,5 @@ export function useLayer({
         }
 
         return undefined;
-    }, [open, enabled]);
+    }, [open, enabled, layerManager]);
 }

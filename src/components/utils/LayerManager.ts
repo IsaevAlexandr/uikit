@@ -20,9 +20,14 @@ export interface LayerConfig extends LayerExtendableProps {
     contentRefs?: Array<React.RefObject<ContentElement> | undefined>;
 }
 
-class LayerManager {
+export class LayerManager {
     private stack: LayerConfig[] = [];
     private mouseDownTarget: HTMLElement | null = null;
+    private containerRef: React.RefObject<HTMLElement> | undefined;
+
+    constructor(container?: React.RefObject<HTMLElement>) {
+        this.containerRef = container;
+    }
 
     add(config: LayerConfig) {
         this.stack.push(config);
@@ -41,16 +46,21 @@ class LayerManager {
         }
     }
 
+    get container() {
+        return this.containerRef?.current ?? document.body;
+    }
+
     private addListeners() {
+        // handle keyboard events on the root level
         document.addEventListener('keydown', this.handleDocumentKeyDown);
-        document.addEventListener('click', this.handleDocumentClick, true);
-        document.addEventListener('mousedown', this.handleDocumentMouseDown, true);
+        this.container.addEventListener('click', this.handleDocumentClick, true);
+        this.container.addEventListener('mousedown', this.handleDocumentMouseDown, true);
     }
 
     private removeListeners() {
         document.removeEventListener('keydown', this.handleDocumentKeyDown);
-        document.removeEventListener('click', this.handleDocumentClick, true);
-        document.removeEventListener('mousedown', this.handleDocumentMouseDown, true);
+        this.container.removeEventListener('click', this.handleDocumentClick, true);
+        this.container.removeEventListener('mousedown', this.handleDocumentMouseDown, true);
     }
 
     private handleDocumentKeyDown = (event: KeyboardEvent) => {
@@ -103,5 +113,3 @@ class LayerManager {
         return false;
     }
 }
-
-export const layerManager = new LayerManager();

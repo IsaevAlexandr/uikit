@@ -8,6 +8,7 @@ import {useBodyScrollLock} from '../utils/useBodyScrollLock';
 import {useLayer, LayerExtendableProps, LayerCloseReason} from '../utils/useLayer';
 import {usePreviousValue} from '../utils/usePreviousValue';
 import {useForceUpdate} from '../utils/useForceUpdate';
+import {useLayerManger} from '../utils/useLayerManager';
 
 import './Modal.scss';
 
@@ -17,6 +18,7 @@ export interface ModalProps extends DOMProps, LayerExtendableProps, QAProps {
     disableBodyScrollLock?: boolean;
     // disableFocusTrap?: boolean;
     children?: React.ReactNode;
+    container?: HTMLElement;
 }
 
 export type ModalCloseReason = LayerCloseReason;
@@ -37,6 +39,7 @@ export function Modal({
     children,
     style,
     className,
+    container,
     qa,
 }: ModalProps) {
     const contentRef = React.useRef<HTMLDivElement>(null);
@@ -76,12 +79,14 @@ export function Modal({
         contentRefs: [contentRef],
     });
 
+    const layerManager = useLayerManger();
+
     if (!keepMounted && !open && !inTransition.current) {
         return null;
     }
 
     return (
-        <Portal>
+        <Portal container={container ?? layerManager.container}>
             <div
                 data-inited={hasBeenOpen.current ? '' : undefined}
                 onAnimationEnd={handleAnimationEnd}
