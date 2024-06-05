@@ -15,9 +15,9 @@ import {ListContainerView} from '../../components/ListContainerView/ListContaine
 import {ListItemView} from '../../components/ListItemView/ListItemView';
 import {useList} from '../../hooks/useList';
 import {useListFilter} from '../../hooks/useListFilter';
+import {useListItemClick} from '../../hooks/useListItemClick';
 import {useListKeydown} from '../../hooks/useListKeydown';
-import {useListState} from '../../hooks/useListState';
-import type {ListItemId, ListItemSize} from '../../types';
+import type {ListItemSize} from '../../types';
 import {getItemRenderState} from '../../utils/getItemRenderState';
 import {createRandomizedData} from '../utils/makeData';
 import {reorderArray} from '../utils/reorderArray';
@@ -37,32 +37,12 @@ export const ListWithDnd = ({size, itemsCount, 'aria-label': ariaLabel}: ListWit
 
     const filterState = useListFilter({items});
 
-    const listState = useListState();
-
-    const list = useList({
+    const {list, listState} = useList({
         getItemId: ({title}) => title,
         items: filterState.items,
-        ...listState,
     });
 
-    const onItemClick = React.useCallback(
-        (id: ListItemId) => {
-            if (id in list.groupsState) {
-                listState.setExpanded((state) => ({
-                    ...state,
-                    [id]: id in state ? !state[id] : false,
-                }));
-            } else {
-                // just toggle item by id
-                listState.setSelected((state) => ({
-                    [id]: !state[id],
-                }));
-            }
-
-            listState.setActiveItemId(id);
-        },
-        [list.groupsState, listState],
-    );
+    const {onItemClick} = useListItemClick(listState);
 
     useListKeydown({
         containerRef,

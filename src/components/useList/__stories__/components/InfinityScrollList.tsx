@@ -9,9 +9,9 @@ import {ListItemView} from '../../components/ListItemView/ListItemView';
 import {ListItemRecursiveRenderer} from '../../components/ListRecursiveRenderer/ListRecursiveRenderer';
 import {useList} from '../../hooks/useList';
 import {useListFilter} from '../../hooks/useListFilter';
+import {useListItemClick} from '../../hooks/useListItemClick';
 import {useListKeydown} from '../../hooks/useListKeydown';
-import {useListState} from '../../hooks/useListState';
-import type {ListItemId, ListItemSize} from '../../types';
+import type {ListItemSize} from '../../types';
 import {getItemRenderState} from '../../utils/getItemRenderState';
 import {useInfinityFetch} from '../utils/useInfinityFetch';
 
@@ -26,25 +26,11 @@ export const InfinityScrollList = ({size}: InfinityScrollListProps) => {
     const {data, onFetchMore, canFetchMore, isLoading} = useInfinityFetch<{title: string}>();
     const filterState = useListFilter({items: data});
 
-    const listState = useListState();
-
-    const list = useList({
+    const {list, listState} = useList({
         items: filterState.items,
-        ...listState,
     });
 
-    const onItemClick = (id: ListItemId) => {
-        if (id in list.groupsState) {
-            listState.setExpanded((state) => ({
-                ...state,
-                [id]: id in state ? !state[id] : false,
-            }));
-        } else {
-            listState.setSelected((state) => ({...state, [id]: !state[id]}));
-        }
-
-        listState.setActiveItemId(id);
-    };
+    const {onItemClick} = useListItemClick(listState);
 
     useListKeydown({
         containerRef,
@@ -55,7 +41,7 @@ export const InfinityScrollList = ({size}: InfinityScrollListProps) => {
 
     const handleReset = () => {
         filterState.reset();
-        listState.setExpanded({});
+        listState.setExpanded?.({});
         listState.setSelected({});
         listState.setActiveItemId(undefined);
     };
@@ -83,14 +69,8 @@ export const InfinityScrollList = ({size}: InfinityScrollListProps) => {
                         />
 
                         <ListContainerView ref={containerRef}>
-                            {list.items.map((item, index) => (
-                                <ListItemRecursiveRenderer
-                                    itemSchema={item}
-                                    key={index}
-                                    index={index}
-                                    expandedById={listState.expandedById}
-                                    idToFlattenIndex={list.idToFlattenIndex}
-                                >
+                            {list.itemsSchema.map((itemSchema, index) => (
+                                <ListItemRecursiveRenderer itemSchema={itemSchema} key={index}>
                                     {(id) => {
                                         const {props, context} = getItemRenderState({
                                             id,

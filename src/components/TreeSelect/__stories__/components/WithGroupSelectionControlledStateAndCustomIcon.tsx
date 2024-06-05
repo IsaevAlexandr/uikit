@@ -5,8 +5,8 @@ import {ChevronDown, ChevronUp, Database, PlugConnection} from '@gravity-ui/icon
 import {Button} from '../../../Button';
 import {Icon} from '../../../Icon';
 import {Flex, spacing} from '../../../layout';
-import {ListItemView, getListParsedState, useListState} from '../../../useList';
-import type {ListItemCommonProps} from '../../../useList';
+import {ListItemView, useList} from '../../../useList';
+import type {ListItemCommonProps, ListItemId} from '../../../useList';
 import {createRandomizedData} from '../../../useList/__stories__/utils/makeData';
 import {TreeSelect} from '../../TreeSelect';
 import type {TreeSelectProps} from '../../types';
@@ -39,22 +39,28 @@ export const WithGroupSelectionControlledStateAndCustomIconExample = ({
         [itemsCount],
     );
 
-    const [value, setValue] = React.useState<string[]>([]);
+    const {list, listState} = useList({items});
 
-    const {expandedById, setExpanded} = useListState({
-        initialValues: {
-            expandedById: getListParsedState(items).initialState.expandedById,
-        },
-    });
+    const onItemClick = (id: ListItemId) => {
+        if (listState.disabledById[id]) return;
+
+        listState.setSelected((prevState) => ({
+            ...(props.multiple ? prevState : {}),
+            [id]: !prevState[id],
+        }));
+
+        listState.setActiveItemId(id);
+    };
 
     return (
         <Flex>
             <TreeSelect
                 {...props}
                 size="l"
+                list={list}
+                listState={listState}
+                onItemClick={onItemClick}
                 mapItemDataToProps={mapCustomDataStructureToKnownProps}
-                expandedById={expandedById}
-                value={value}
                 renderItem={({
                     data,
                     props: {
@@ -77,13 +83,9 @@ export const WithGroupSelectionControlledStateAndCustomIconExample = ({
                                         className={spacing({mr: 1})}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setExpanded((prevExpandedState) => ({
+                                            listState.setExpanded?.((prevExpandedState) => ({
                                                 ...prevExpandedState,
-                                                // by default all groups expanded
-                                                [state.id]:
-                                                    state.id in prevExpandedState
-                                                        ? !prevExpandedState[state.id]
-                                                        : false,
+                                                [state.id]: !prevExpandedState[state.id],
                                             }));
                                         }}
                                     >
@@ -94,8 +96,6 @@ export const WithGroupSelectionControlledStateAndCustomIconExample = ({
                         />
                     );
                 }}
-                items={items}
-                onUpdate={setValue}
             />
         </Flex>
     );

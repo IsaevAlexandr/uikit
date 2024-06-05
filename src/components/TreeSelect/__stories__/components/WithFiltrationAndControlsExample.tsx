@@ -5,7 +5,8 @@ import {Text} from '../../../Text';
 import {RenderVirtualizedContainer} from '../../../TreeList/__stories__/components/RenderVirtualizedContainer';
 import {TextInput} from '../../../controls';
 import {Flex, spacing} from '../../../layout';
-import {ListItemView, useListFilter} from '../../../useList';
+import {ListItemView, useList, useListFilter, useListItemClick} from '../../../useList';
+import type {ListItemId} from '../../../useList';
 import {createRandomizedData} from '../../../useList/__stories__/utils/makeData';
 import {TreeSelect} from '../../TreeSelect';
 import type {TreeSelectProps, TreeSelectRenderContainer} from '../../types';
@@ -44,15 +45,19 @@ export const WithFiltrationAndControlsExample = ({
     }, [itemsCount]);
 
     const [open, onOpenChange] = React.useState(true);
-    const [value, setValue] = React.useState<string[]>([]);
+
     const filterState = useListFilter({items});
+    const {list, listState} = useList({
+        items: filterState.items,
+    });
 
     return (
         <Flex>
             <TreeSelect
                 {...treeSelectProps}
+                {...list}
+                {...listState}
                 mapItemDataToProps={identity}
-                multiple
                 open={open}
                 popupWidth={350}
                 onOpenChange={onOpenChange}
@@ -79,28 +84,36 @@ export const WithFiltrationAndControlsExample = ({
                         <Button
                             width="max"
                             onClick={() => {
-                                setValue([]);
+                                listState.setSelected({});
                                 filterState.reset();
                             }}
                         >
                             Reset
                         </Button>
                         <Button
-                            disabled={!value.length}
+                            disabled={
+                                // get selected ids list
+                                !Object.entries(listState.selectedById).reduce<ListItemId[]>(
+                                    (acc, [id, value]) => {
+                                        if (value) {
+                                            acc.push(id);
+                                        }
+                                        return acc;
+                                    },
+                                    [],
+                                )
+                            }
                             width="max"
                             view="action"
                             onClick={() => {
                                 onOpenChange(false);
-                                alert(JSON.stringify(value));
+                                alert(JSON.stringify(listState.selectedById, null, 2));
                             }}
                         >
                             Accept
                         </Button>
                     </Flex>
                 }
-                value={value}
-                items={filterState.items}
-                onUpdate={setValue}
             />
         </Flex>
     );

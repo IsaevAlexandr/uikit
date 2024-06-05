@@ -21,7 +21,12 @@ import type {
     TreeSelectRenderItem,
 } from '../../../../TreeSelect/types';
 import {Flex} from '../../../../layout/Flex/Flex';
-import type {ListItemCommonProps, ListItemViewProps} from '../../../../useList';
+import type {
+    ListItemCommonProps,
+    ListItemId,
+    ListItemViewProps,
+    RenderItemProps,
+} from '../../../../useList';
 import {ListContainerView, ListItemView} from '../../../../useList';
 import {block} from '../../../../utils/cn';
 import type {TableColumnConfig} from '../../../Table';
@@ -71,18 +76,6 @@ const prepareStickyState = (
         sortableItemIdList: visibleFlattenIds.slice(lastStickyStartIdx, firstStickyEndIdx),
         stickyEndItemIdList: visibleFlattenIds.slice(firstStickyEndIdx),
     };
-};
-
-const prepareValue = (tableColumnItems: TableColumnSetupItem[]) => {
-    const selectedIds: string[] = [];
-
-    tableColumnItems.forEach(({id, isSelected}) => {
-        if (isSelected) {
-            selectedIds.push(id);
-        }
-    });
-
-    return selectedIds;
 };
 
 interface RenderContainerProps {
@@ -236,7 +229,9 @@ export type TableColumnSetupItem = TableSetting & {
     sticky?: TableColumnConfig<unknown>['sticky'];
 };
 
-const mapItemDataToProps = (item: TableColumnSetupItem): ListItemCommonProps => {
+const mapItemDataToProps = (
+    item: TableColumnSetupItem,
+): ListItemCommonProps & Partial<RenderItemProps> => {
     return {
         title: item.title,
     };
@@ -287,16 +282,24 @@ export const TableColumnSetup = (props: TableColumnSetupProps) => {
 
     const [open, setOpen] = React.useState(false);
 
-    const [items, setItems] = React.useState(propsItems);
-    const [prevPropsItems, setPrevPropsItems] = React.useState(propsItems);
-    if (propsItems !== prevPropsItems) {
-        setPrevPropsItems(propsItems);
+    const [items, setItems] = React.useState(propsItems); // the array of elements is responsible for the final order
 
-        setItems(propsItems);
-    }
+    const initialValues = propsItems.reduce<ListItemId[]>((acc, {id, isSelected}) => {
+        if (isSelected) {
+            acc.push(id);
+        }
+
+        return acc;
+    }, []);
+
+    const [value, setValue] = React.useState<ListItemId[]>(initialValues);
 
     const onApply = () => {
-        const newSettings = items.map<TableSetting>(({id, isSelected}) => ({id, isSelected}));
+        const newSettings: TableSetting[] = items.map(({id}) => ({
+            id,
+            isSelected: value.includes(id),
+        }));
+
         propsOnUpdate(newSettings);
         setOpen(false);
     };
@@ -365,27 +368,16 @@ export const TableColumnSetup = (props: TableColumnSetupProps) => {
         }
     };
 
-    const onUpdate = (selectedItemsIds: string[]) => {
-        setItems((prevItems) => {
-            return prevItems.map((item) => ({
-                ...item,
-                isSelected: item.isRequired || selectedItemsIds.includes(item.id),
-            }));
-        });
-    };
-
-    const value = React.useMemo(() => prepareValue(items), [items]);
-
     return (
         <TreeSelect
+            items={items}
+            value={value}
+            onUpdate={(ids) => setValue(ids)}
             className={b(null, className)}
             mapItemDataToProps={mapItemDataToProps}
             multiple
             size="l"
             open={open}
-            value={value}
-            items={items}
-            onUpdate={onUpdate}
             popupWidth={popupWidth}
             onOpenChange={onOpenChange}
             placement={popupPlacement}

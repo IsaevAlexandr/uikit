@@ -13,7 +13,7 @@ import type {
 import {Icon} from '../../../Icon';
 import {Flex} from '../../../layout';
 import type {ListItemViewProps} from '../../../useList';
-import {ListContainerView, ListItemView} from '../../../useList';
+import {ListContainerView, ListItemView, useList} from '../../../useList';
 import {createRandomizedData} from '../../../useList/__stories__/utils/makeData';
 import {reorderArray} from '../../../useList/__stories__/utils/reorderArray';
 import {TreeSelect} from '../../TreeSelect';
@@ -49,8 +49,12 @@ const randomItems: CustomDataType[] = createRandomizedData({
 
 export const WithDndListExample = (storyProps: WithDndListExampleProps) => {
     const [items, setItems] = React.useState(randomItems);
-    const [activeItemId, setActiveItemId] = React.useState<string | undefined>(undefined);
-    const [value, setValue] = React.useState<string[]>([]);
+
+    const {list, listState} = useList({
+        items,
+        // you can omit this prop here. If prop `id` passed, TreeSelect would take it by default
+        getItemId: ({id}) => id,
+    });
 
     const renderContainer: TreeSelectRenderContainer<CustomDataType> = ({
         renderItem,
@@ -65,7 +69,7 @@ export const WithDndListExample = (storyProps: WithDndListExampleProps) => {
                     reorderArray(currentItems, source.index, destination.index),
                 );
 
-                setActiveItemId(`${destination.index}`);
+                listState.setActiveItemId(`${destination.index}`);
             }
         };
 
@@ -145,21 +149,11 @@ export const WithDndListExample = (storyProps: WithDndListExampleProps) => {
         <Flex>
             <TreeSelect
                 {...storyProps}
-                value={value}
-                items={items}
-                activeItemId={activeItemId}
-                setActiveItemId={setActiveItemId}
-                // you can omit this prop here. If prop `id` passed, TreeSelect would take it by default
-                getItemId={({id}) => id}
+                list={list}
+                listState={listState}
                 mapItemDataToProps={({someRandomKey}) => ({
                     title: someRandomKey,
                 })}
-                onItemClick={({id, disabled, context: {groupState}}) => {
-                    if (!groupState && !disabled) {
-                        setValue([id]);
-                        setActiveItemId(id);
-                    }
-                }}
                 renderContainer={renderContainer}
                 renderItem={renderItem}
             />

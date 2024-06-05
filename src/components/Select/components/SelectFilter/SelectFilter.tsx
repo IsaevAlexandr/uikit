@@ -12,7 +12,7 @@ const b = block('select-filter');
 
 type SelectFilterProps = {
     onChange: (filter: string) => void;
-    onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void;
+    onKeyDown?: (e: React.KeyboardEvent<HTMLElement>) => void;
     renderFilter?: SelectProps['renderFilter'];
     size: NonNullable<SelectProps['size']>;
     value: string;

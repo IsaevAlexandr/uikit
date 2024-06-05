@@ -9,6 +9,7 @@ import _isEqual from 'lodash/isEqual';
 import type {TableAction, TableSettingsData} from '..';
 import {Icon} from '../../Icon';
 import {TreeSelect} from '../../TreeSelect/TreeSelect';
+import {useList} from '../../useList';
 import {Table} from '../Table';
 import type {TableProps} from '../Table';
 
@@ -144,6 +145,13 @@ const WithTableActionsTemplate: StoryFn<TableProps<DataItem>> = (args) => {
             handler: () => {},
         },
     ];
+
+    const items = ['action 1', 'action 2', 'action 3'];
+
+    const {list, listState} = useList({
+        items,
+        rootNodesGroups: false,
+    });
     return (
         <React.Fragment>
             <h3>{'with getRowActions property'}</h3>
@@ -157,11 +165,10 @@ const WithTableActionsTemplate: StoryFn<TableProps<DataItem>> = (args) => {
                         return null;
                     }
 
-                    const items = ['action 1', 'action 2', 'action 3'];
-
                     return (
-                        <TreeSelect
-                            items={items}
+                        <TreeSelect<string>
+                            list={list}
+                            listState={listState}
                             size="s"
                             mapItemDataToProps={(title) => ({title})}
                             title="Actions select example"

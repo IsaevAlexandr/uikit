@@ -20,12 +20,12 @@ type ItemRendererProps<T> = Partial<ListState> &
          * Affects the view of the selected items
          */
         multiple?: boolean;
-        /**
-         * @default true
-         *
-         * Group expanded initial state
-         */
-        defaultExpanded?: boolean;
+        // /**
+        //  * @default true
+        //  *
+        //  * Group expanded initial state
+        //  */
+        // defaultExpanded?: boolean;
         id: ListItemId;
         mapItemDataToProps(data: T): ListItemCommonProps;
         onItemClick?(id: ListItemId): void;
@@ -48,7 +48,7 @@ export const getItemRenderState = <T,>({
     selectedById,
     activeItemId,
     multiple = false,
-    defaultExpanded = true,
+    // defaultExpanded = true,
     id,
 }: ItemRendererProps<T>) => {
     const context: RenderItemContext = {
@@ -61,8 +61,8 @@ export const getItemRenderState = <T,>({
     let selected; // the absence of the value of the selected element affects its view. For example, an element without a value will not have a visual highlight on the hover
 
     // isGroup
-    if (groupsState[id] && expandedById) {
-        expanded = expandedById[id] ?? defaultExpanded;
+    if (expandedById && id in expandedById) {
+        expanded = expandedById[id];
     }
 
     if (selectedById) {

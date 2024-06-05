@@ -4,57 +4,62 @@ import React from 'react';
 import type {ListState} from '../types';
 
 interface UseListStateProps {
+    // list: ListItemType<T>[];
     /**
      * Initial state values
      */
     initialValues?: Partial<ListState>;
+    rootNodesGroups?: boolean;
     /**
-     * Ability to pass link to another state value
-     *
-     * ```tsx
-     * const listState = useListState()
-     *
-     * // inside your component
-     * const innerListState = useListState({
-     *  controlledValues: listState
-     * })
-     * ```
+     * If passed groups state exists in lost state.
+     * Values is default value of it state
      */
-    controlledValues?: Partial<ListState>;
+    groupsDefaultState?: 'expanded' | 'closed';
+
+    // TODO: описать, как работает
+    controlled?: boolean;
 }
 
-function useControlledState<T>(value: T, defaultValue: T) {
-    const [state, setState] = React.useState(value || defaultValue);
+// TODO: убрать прямой экспорт
+export const useListState = ({
+    initialValues,
+    rootNodesGroups,
+    controlled,
+}: UseListStateProps): ListState => {
+    const initialValuesRef = React.useRef(initialValues);
 
-    return [value || state, setState] as const;
-}
+    const [disabledById, setDisabled] = React.useState(initialValues?.disabledById ?? {});
+    const [selectedById, setSelected] = React.useState(initialValues?.selectedById ?? {});
+    const [expandedById, setExpanded] = React.useState(initialValues?.expandedById ?? {});
+    const [activeItemId, setActiveItemId] = React.useState(initialValues?.activeItemId);
 
-export const useListState = ({initialValues, controlledValues}: UseListStateProps = {}) => {
-    const [disabledById, setDisabled] = useControlledState(
-        controlledValues?.disabledById!,
-        initialValues?.disabledById || {},
-    );
-    const [selectedById, setSelected] = useControlledState(
-        controlledValues?.selectedById!,
-        initialValues?.selectedById || {},
-    );
-    const [expandedById, setExpanded] = useControlledState(
-        controlledValues?.expandedById!,
-        initialValues?.expandedById || {},
-    );
-    const [activeItemId, setActiveItemId] = useControlledState(
-        controlledValues?.activeItemId,
-        initialValues?.activeItemId,
-    );
+    if (controlled && initialValues && initialValuesRef.current !== initialValues) {
+        if (initialValues?.disabledById) {
+            setDisabled((prevValues) => ({...initialValues.disabledById, ...prevValues}));
+        }
+        if (initialValues?.selectedById) {
+            setSelected((prevValues) => ({...initialValues.selectedById, ...prevValues}));
+        }
+        if (initialValues?.expandedById) {
+            setExpanded((prevValues) => ({...initialValues.expandedById, ...prevValues}));
+        }
+        setActiveItemId((prevValue) => prevValue ?? initialValues?.activeItemId);
+        initialValuesRef.current = initialValues;
+    }
 
-    return {
+    const result: ListState = {
         disabledById,
-        setDisabled,
         selectedById,
-        setSelected,
-        expandedById,
-        setExpanded,
         activeItemId,
+        setDisabled,
+        setSelected,
         setActiveItemId,
     };
+
+    if (rootNodesGroups) {
+        result.expandedById = expandedById;
+        result.setExpanded = setExpanded;
+    }
+
+    return result;
 };

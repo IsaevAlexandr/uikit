@@ -7,9 +7,9 @@ import {ListContainerView} from '../../components/ListContainerView/ListContaine
 import {ListItemView} from '../../components/ListItemView/ListItemView';
 import {ListItemRecursiveRenderer} from '../../components/ListRecursiveRenderer/ListRecursiveRenderer';
 import {useList} from '../../hooks/useList';
+import {useListItemClick} from '../../hooks/useListItemClick';
 import {useListKeydown} from '../../hooks/useListKeydown';
-import {useListState} from '../../hooks/useListState';
-import type {ListItemId, ListItemSize} from '../../types';
+import type {ListItemSize} from '../../types';
 import {getItemRenderState} from '../../utils/getItemRenderState';
 import {scrollToListItem} from '../../utils/scrollToListItem';
 import {createRandomizedData} from '../utils/makeData';
@@ -31,12 +31,11 @@ export const PopupWithTogglerList = ({size, itemsCount}: PopupWithTogglerListPro
         [itemsCount],
     );
 
-    const listState = useListState();
-
-    const list = useList({
+    const {list, listState} = useList({
         items,
-        ...listState,
     });
+
+    const {onItemClick} = useListItemClick(listState);
 
     const [selectedId] = React.useMemo(
         () => Object.keys(listState.selectedById),
@@ -56,23 +55,6 @@ export const PopupWithTogglerList = ({size, itemsCount}: PopupWithTogglerListPro
         // subscribe only in open event
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
-
-    const onItemClick = (id: ListItemId) => {
-        if (id in list.groupsState) {
-            listState.setExpanded((state) => ({
-                ...state,
-                [id]: id in state ? !state[id] : false,
-            }));
-            listState.setActiveItemId(id);
-        } else {
-            // only one item active
-            listState.setSelected((state) => ({
-                [id]: !state[id],
-            }));
-            setOpen(false);
-            listState.setActiveItemId(undefined);
-        }
-    };
 
     useListKeydown({
         containerRef,
@@ -98,14 +80,8 @@ export const PopupWithTogglerList = ({size, itemsCount}: PopupWithTogglerListPro
                 restoreFocusRef={controlRef}
             >
                 <ListContainerView ref={containerRef}>
-                    {items.map((item, index) => (
-                        <ListItemRecursiveRenderer
-                            itemSchema={item}
-                            key={index}
-                            index={index}
-                            expandedById={listState.expandedById}
-                            idToFlattenIndex={list.idToFlattenIndex}
-                        >
+                    {list.itemsSchema.map((itemSchema, index) => (
+                        <ListItemRecursiveRenderer itemSchema={itemSchema} key={index}>
                             {(id) => {
                                 const {props, context} = getItemRenderState({
                                     id,

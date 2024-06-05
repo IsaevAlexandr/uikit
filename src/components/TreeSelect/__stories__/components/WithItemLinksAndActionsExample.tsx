@@ -6,8 +6,7 @@ import {Button} from '../../../Button';
 import {DropdownMenu} from '../../../DropdownMenu';
 import {Icon} from '../../../Icon';
 import {Flex} from '../../../layout';
-import type {ListItemId} from '../../../useList';
-import {ListItemView} from '../../../useList';
+import {ListItemView, useList} from '../../../useList';
 import {createRandomizedData} from '../../../useList/__stories__/utils/makeData';
 import {TreeSelect} from '../../TreeSelect';
 import type {TreeSelectProps} from '../../types';
@@ -22,30 +21,22 @@ export interface WithItemLinksAndActionsExampleProps
     > {}
 
 export const WithItemLinksAndActionsExample = (props: WithItemLinksAndActionsExampleProps) => {
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = React.useState(true);
     const items = React.useMemo(() => createRandomizedData({num: 10, depth: 1}), []);
-    const [value, setValue] = React.useState<string[]>([]);
-    const [expandedById, setExpanded] = React.useState<Record<ListItemId, boolean>>({});
+    const {list, listState} = useList({
+        items,
+    });
 
     return (
         <Flex>
             <TreeSelect
                 {...props}
+                list={list}
+                listState={listState}
                 mapItemDataToProps={identity}
                 open={open}
                 onOpenChange={setOpen}
                 size="l"
-                value={value}
-                items={items}
-                onItemClick={({id, context: {groupState}, disabled}) => {
-                    if (!groupState && !disabled) {
-                        setValue([id]);
-                    }
-
-                    // navigation logic here to support keyboard
-                    setOpen((x) => !x);
-                }}
-                expandedById={expandedById}
                 renderItem={({
                     data,
                     props: {
@@ -91,13 +82,9 @@ export const WithItemLinksAndActionsExample = (props: WithItemLinksAndActionsExa
                                                 e.stopPropagation();
                                                 e.preventDefault();
 
-                                                setExpanded((prevExpandedState) => ({
+                                                listState.setExpanded?.((prevExpandedState) => ({
                                                     ...prevExpandedState,
-                                                    // by default all groups expanded
-                                                    [state.id]:
-                                                        state.id in prevExpandedState
-                                                            ? !prevExpandedState[state.id]
-                                                            : false,
+                                                    [state.id]: !prevExpandedState[state.id],
                                                 }));
                                             }}
                                         >

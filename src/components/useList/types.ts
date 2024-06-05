@@ -86,10 +86,18 @@ export type ParsedState<T> = {
     groupsState: Record<ListItemId, GroupParsedState>;
 };
 
+type SetStateAction<S> = S | ((prevState: S) => S);
+
+type ListStateHandler<S> = (arg: SetStateAction<S>) => void;
+
 export type ListState = {
     disabledById: Record<ListItemId, boolean>;
     selectedById: Record<ListItemId, boolean>;
-    expandedById: Record<ListItemId, boolean>;
+    expandedById?: Record<ListItemId, boolean>;
+    setExpanded?: ListStateHandler<Record<ListItemId, boolean>>;
+    setSelected: ListStateHandler<Record<ListItemId, boolean>>;
+    setDisabled: ListStateHandler<Record<ListItemId, boolean>>;
+    setActiveItemId: ListStateHandler<ListItemId | undefined>;
     activeItemId?: ListItemId;
 };
 
@@ -98,9 +106,19 @@ export type InitialListParsedState = Pick<
     'disabledById' | 'expandedById' | 'selectedById'
 >;
 
+type ItemSchemaItem = {
+    id: ListItemId;
+    index: number;
+};
+
+export type ItemSchema = ItemSchemaItem & {
+    children?: ItemSchema[];
+};
+
 export type ParsedFlattenState = {
     visibleFlattenIds: ListItemId[];
     idToFlattenIndex: Record<ListItemId, number>;
+    itemsSchema: ItemSchema[];
 };
 
 export type ListParsedState<T> = ParsedState<T> &

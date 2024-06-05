@@ -1,3 +1,5 @@
+import type {ParsedFlattenState} from '../types';
+
 import {flattenItems} from './flattenItems';
 
 const data = [
@@ -31,31 +33,82 @@ const data = [
 
 describe('flattenItems', () => {
     test('should return expected result', () => {
-        expect(flattenItems(data)).toEqual({
+        const result: ParsedFlattenState = {
             visibleFlattenIds: ['0', '1', '1-0', '1-1', '1-1-0', '1-2', '2'],
             idToFlattenIndex: {0: 0, 1: 1, '1-0': 2, '1-1': 3, '1-1-0': 4, '1-2': 5, 2: 6},
-        });
+            itemsSchema: [
+                {
+                    id: '0',
+                    index: 0,
+                },
+                {
+                    id: '1',
+                    index: 1,
+                    children: [
+                        {
+                            id: '1-0',
+                            index: 2,
+                        },
+                        {
+                            id: '1-1',
+                            index: 3,
+                            children: [{id: '1-1-0', index: 4, children: []}],
+                        },
+                        {
+                            id: '1-2',
+                            index: 5,
+                        },
+                    ],
+                },
+                {
+                    id: '2',
+                    index: 6,
+                    children: [],
+                },
+            ],
+        };
+
+        expect(flattenItems(data)).toEqual(result);
     });
 
     test('should return expected result with expanded state', () => {
+        const result: ParsedFlattenState = {
+            visibleFlattenIds: ['0', '1', '2'],
+            idToFlattenIndex: {0: 0, 1: 1, 2: 2},
+            itemsSchema: [],
+        };
+
         expect(
             flattenItems(data, {
                 '1': false,
             }),
-        ).toEqual({visibleFlattenIds: ['0', '1', '2'], idToFlattenIndex: {0: 0, 1: 1, 2: 2}});
+        ).toEqual(result);
     });
     test('should return expected result with expanded state 2', () => {
+        const result: ParsedFlattenState = {
+            visibleFlattenIds: ['0', '1', '1-0', '1-1', '1-2', '2'],
+            idToFlattenIndex: {0: 0, 1: 1, '1-0': 2, '1-1': 3, '1-2': 4, 2: 5},
+            itemsSchema: [],
+        };
+
         expect(
             flattenItems(data, {
                 '1-1': false,
             }),
-        ).toEqual({
-            visibleFlattenIds: ['0', '1', '1-0', '1-1', '1-2', '2'],
-            idToFlattenIndex: {0: 0, 1: 1, '1-0': 2, '1-1': 3, '1-2': 4, 2: 5},
-        });
+        ).toEqual(result);
     });
 
     test('should return expected result with expanded state and id getter override', () => {
+        const result: ParsedFlattenState = {
+            visibleFlattenIds: ['item-0', 'item-1', 'item-2'],
+            idToFlattenIndex: {
+                'item-0': 0,
+                'item-1': 1,
+                'item-2': 2,
+            },
+            itemsSchema: [],
+        };
+
         expect(
             flattenItems(
                 data,
@@ -64,13 +117,6 @@ describe('flattenItems', () => {
                 },
                 ({title}) => title,
             ),
-        ).toEqual({
-            visibleFlattenIds: ['item-0', 'item-1', 'item-2'],
-            idToFlattenIndex: {
-                'item-0': 0,
-                'item-1': 1,
-                'item-2': 2,
-            },
-        });
+        ).toEqual(result);
     });
 });

@@ -5,11 +5,11 @@ import type {
     ListItemCommonProps,
     ListItemId,
     ListItemSize,
-    ListItemType,
     ListParsedState,
     ListState,
     RenderItemContext,
     RenderItemProps,
+    UseListResult,
 } from '../useList';
 
 export type TreeListRenderItem<T, P extends {} = {}> = (props: {
@@ -26,6 +26,7 @@ interface ItemClickContext<T> {
     id: ListItemId;
     data: T;
     index: number;
+    isGroup: boolean;
     /**
      * Current item `disabled` value
      */
@@ -36,15 +37,16 @@ interface ItemClickContext<T> {
     selected: boolean;
     /**
      * Current item `expanded` value for group
+     * // TODO: подкорректировать коммент
      */
-    expanded: boolean;
+    expanded?: boolean;
     /**
      * List content item info
      */
     context: RenderItemContext;
 }
 
-export type TreeListOnItemClick<T, R = void> = (ctx: ItemClickContext<T>, defaultCb: R) => void;
+export type TreeListOnItemClick<T> = (ctx: ItemClickContext<T>) => void;
 
 export type TreeListRenderContainerProps<T> = ListParsedState<T> &
     QAProps &
@@ -53,10 +55,10 @@ export type TreeListRenderContainerProps<T> = ListParsedState<T> &
         size: ListItemSize;
         containerRef?: React.RefObject<HTMLDivElement>;
         className?: string;
-        /**
-         * Define custom id depended on item data value to use in controlled state component variant
-         */
-        getItemId?(item: T): ListItemId;
+        // /**
+        //  * Define custom id depended on item data value to use in controlled state component variant
+        //  */
+        // getItemId?(item: T): ListItemId;
         renderItem(
             id: ListItemId,
             index: number,
@@ -73,36 +75,28 @@ export type TreeListRenderContainer<T> = (
 
 export type TreeListMapItemDataToProps<T> = (item: T) => ListItemCommonProps;
 
-export interface TreeListProps<T> extends QAProps, Partial<ListState> {
+export interface TreeListProps<T, P extends {} = {}> extends QAProps, UseListResult<T> {
     /**
      * Control outside list container dom element. For example for keyboard
      */
     containerRef?: React.RefObject<HTMLDivElement>;
     id?: string | undefined;
     className?: string;
-    items: ListItemType<T>[];
+    // items: ListItemType<T>[];
     multiple?: boolean;
     size?: ListItemSize;
-    /**
-     * @default true
-     *
-     * Ability to handle default groups expanded behavior.
-     * Works if `expandedById` state passed
-     */
-    defaultGroupsExpanded?: boolean;
-    /**
-     * Define custom id depended on item data value to use in controlled state component variant
-     */
-    getItemId?(item: T): ListItemId;
+    // /**
+    //  * Define custom id depended on item data value to use in controlled state component variant
+    //  */
+    // getItemId?(item: T): ListItemId;
     /**
      * Override list item content by you custom node.
      */
-    renderItem?: TreeListRenderItem<T>;
+    renderItem?: TreeListRenderItem<T, P>;
     renderContainer?: TreeListRenderContainer<T>;
-    onItemClick?: TreeListOnItemClick<T>;
-    mapItemDataToProps: TreeListMapItemDataToProps<T>;
     /**
-     * Required for keyboard correct work
+     * `null` value - if for some reason you don't need default click item behavior
      */
-    setActiveItemId?(listItemId: ListItemId): void;
+    onItemClick?: null | ((id: ListItemId) => void);
+    mapItemDataToProps: TreeListMapItemDataToProps<T>;
 }

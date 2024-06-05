@@ -46,8 +46,36 @@ export function flattenItems<T>(
         idToFlattenIndex[index] = item;
     }
 
+    const getItemSchema = ({
+        item,
+        parentId,
+        index,
+    }: {
+        item: ListItemType<T>;
+        parentId?: string;
+        index: number;
+    }) => {
+        const groupedId = getGroupItemId(index, parentId);
+        const id = getListItemId({groupedId, item, getItemId});
+
+        const it: ParsedFlattenState['itemsSchema'][0] = {id, index: idToFlattenIndex[id]};
+
+        if (isTreeItemGuard(item) && item.children && !(id in expandedById && !expandedById[id])) {
+            it.children = item.children.map((item, index) =>
+                getItemSchema({item, parentId: id, index}),
+            );
+        }
+
+        return it;
+    };
+
+    const itemsSchema: ParsedFlattenState['itemsSchema'] = items.map((item, index) =>
+        getItemSchema({item, index}),
+    );
+
     return {
         visibleFlattenIds,
         idToFlattenIndex,
+        itemsSchema,
     };
 }

@@ -6,7 +6,8 @@ import {Button} from '../../../Button';
 import {DropdownMenu} from '../../../DropdownMenu';
 import {Icon} from '../../../Icon';
 import {Flex} from '../../../layout';
-import {ListItemView, useListState} from '../../../useList';
+import {ListItemView, useList} from '../../../useList';
+import type {ListItemId} from '../../../useList';
 import {createRandomizedData} from '../../../useList/__stories__/utils/makeData';
 import {TreeList} from '../../TreeList';
 import type {TreeListProps} from '../../types';
@@ -20,28 +21,34 @@ function identity<T>(value: T): T {
 }
 
 export interface WithItemLinksAndActionsStoryProps
-    extends Omit<
-        TreeListProps<{title: string}>,
-        'items' | 'size' | 'multiple' | 'mapItemDataToProps'
-    > {}
+    extends Omit<TreeListProps<{title: string}>, 'items' | 'size' | 'mapItemDataToProps'> {}
 
 export const WithItemLinksAndActionsStory = (props: WithItemLinksAndActionsStoryProps) => {
     const items = React.useMemo(() => createRandomizedData({num: 10, depth: 1}), []);
 
-    const listState = useListState();
+    const {list, listState} = useList({
+        items,
+    });
+
+    const onItemClick = (id: ListItemId) => {
+        if (listState.disabledById[id]) return;
+
+        listState.setSelected((prevState) => ({
+            ...(props.multiple ? prevState : {}),
+            [id]: !prevState[id],
+        }));
+
+        listState.setActiveItemId(id);
+    };
 
     return (
         <TreeList
             {...props}
-            {...listState}
+            list={list}
+            listState={listState}
             mapItemDataToProps={identity}
+            onItemClick={onItemClick}
             size="l"
-            items={items}
-            onItemClick={({id, selected, disabled, context: {groupState}}) => {
-                if (!groupState && !disabled) {
-                    listState.setSelected({[id]: !selected});
-                }
-            }}
             renderItem={({
                 data,
                 props: {
@@ -89,13 +96,9 @@ export const WithItemLinksAndActionsStory = (props: WithItemLinksAndActionsStory
                                             e.stopPropagation();
                                             e.preventDefault();
 
-                                            listState.setExpanded((prevExpandedState) => ({
+                                            listState.setExpanded?.((prevExpandedState) => ({
                                                 ...prevExpandedState,
-                                                // by default all groups expanded
-                                                [state.id]:
-                                                    state.id in prevExpandedState
-                                                        ? !prevExpandedState[state.id]
-                                                        : false,
+                                                [state.id]: !prevExpandedState[state.id],
                                             }));
                                         }}
                                         extraProps={{

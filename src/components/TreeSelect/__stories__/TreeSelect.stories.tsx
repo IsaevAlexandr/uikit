@@ -3,6 +3,7 @@ import React from 'react';
 import type {Meta, StoryFn} from '@storybook/react';
 
 import {Flex} from '../../layout';
+import {useList, useListItemClick} from '../../useList';
 import {createRandomizedData} from '../../useList/__stories__/utils/makeData';
 import {TreeSelect} from '../TreeSelect';
 import type {TreeSelectProps} from '../types';
@@ -46,15 +47,24 @@ const DefaultTemplate: StoryFn<
 > = ({itemsCount = 5, ...props}) => {
     const items = React.useMemo(() => createRandomizedData({num: itemsCount}), [itemsCount]);
 
+    const {list, listState} = useList({
+        items,
+    });
+
+    const {onItemClick} = useListItemClick(listState, {multiple: props.multiple});
+
     return (
         <Flex>
             <TreeSelect
                 {...props}
+                list={list}
+                listState={listState}
                 mapItemDataToProps={(x) => x}
-                items={items}
-                onUpdate={(...args) =>
-                    console.log('Uncontrolled `TreeSelect onUpdate args: `', ...args)
-                }
+                onItemClick={(id) => {
+                    console.log('clicked on item with id: ', id);
+
+                    onItemClick(id);
+                }}
             />
         </Flex>
     );
@@ -72,9 +82,7 @@ const WithGroupSelectionControlledStateAndCustomIconTemplate: StoryFn<
 
 export const WithGroupSelectionControlledStateAndCustomIcon =
     WithGroupSelectionControlledStateAndCustomIconTemplate.bind({});
-WithGroupSelectionControlledStateAndCustomIcon.args = {
-    groupsBehavior: 'selectable',
-};
+WithGroupSelectionControlledStateAndCustomIcon.args = {};
 
 const InfinityScrollTemplate: StoryFn<InfinityScrollExampleProps> = (props) => {
     return <InfinityScrollExample {...props} />;

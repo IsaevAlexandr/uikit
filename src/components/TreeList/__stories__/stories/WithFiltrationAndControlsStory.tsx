@@ -4,7 +4,7 @@ import {Button} from '../../../Button';
 import {Text} from '../../../Text';
 import {TextInput} from '../../../controls';
 import {Flex, spacing} from '../../../layout';
-import {useListFilter, useListState} from '../../../useList';
+import {useList, useListFilter} from '../../../useList';
 import {createRandomizedData} from '../../../useList/__stories__/utils/makeData';
 import {TreeList} from '../../TreeList';
 import type {TreeListProps, TreeListRenderContainerProps} from '../../types';
@@ -39,9 +39,11 @@ export const WithFiltrationAndControlsStory = ({
         return {items: baseItems, renderContainer: containerRenderer};
     }, [itemsCount]);
 
-    const listState = useListState();
-
     const filterState = useListFilter({items});
+
+    const {list, listState} = useList({
+        items: filterState.items,
+    });
 
     return (
         <Flex direction="column" gap="3">
@@ -57,33 +59,10 @@ export const WithFiltrationAndControlsStory = ({
             />
             <TreeList
                 {...treeSelectProps}
-                {...listState}
-                onItemClick={({id, disabled, context: {groupState}}) => {
-                    if (disabled) return;
-
-                    if (groupState) {
-                        listState.setExpanded((prevState) => ({
-                            ...prevState,
-                            [id]: id in prevState ? !prevState[id] : false,
-                        }));
-                    } else {
-                        listState.setSelected((prevState) =>
-                            treeSelectProps.multiple
-                                ? {
-                                      ...prevState,
-                                      [id]: !prevState[id],
-                                  }
-                                : {
-                                      [id]: !prevState[id],
-                                  },
-                        );
-                    }
-
-                    listState.setActiveItemId(id);
-                }}
+                list={list}
+                listState={listState}
                 mapItemDataToProps={(x) => x}
                 renderContainer={renderContainer}
-                items={filterState.items}
             />
             <Flex gap="2" className={spacing({px: 2, py: 1})}>
                 <Button

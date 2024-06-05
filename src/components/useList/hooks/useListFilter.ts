@@ -21,6 +21,7 @@ interface UseListFilterProps<T> {
      * Override only logic with item affiliation
      */
     filterItem?(value: string, item: T): boolean;
+    onFilterChange?(value: string): void;
     debounceTimeout?: number;
     initialFilterValue?: string;
 }
@@ -39,6 +40,7 @@ export function useListFilter<T>({
     items: externalItems,
     initialFilterValue = '',
     filterItem,
+    onFilterChange,
     filterItems,
     debounceTimeout = 300,
 }: UseListFilterProps<T>) {
@@ -79,14 +81,16 @@ export function useListFilter<T>({
         return {
             reset: () => {
                 setFilter(initialFilterValue);
+                onFilterChange?.(initialFilterValue);
                 debouncedFn(initialFilterValue);
             },
             onFilterUpdate: (nextFilterValue: string) => {
                 setFilter(nextFilterValue);
+                onFilterChange?.(nextFilterValue);
                 debouncedFn(nextFilterValue);
             },
         };
-    }, [debouncedFn, initialFilterValue]);
+    }, [debouncedFn, initialFilterValue, onFilterChange]);
 
     return {
         filterRef,
